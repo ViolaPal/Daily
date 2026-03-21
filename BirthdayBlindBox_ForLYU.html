@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日盲盒 | Only For Mr.LYU ❤</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #D8DEE8;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .perspective {
+            perspective: 1000px;
+        }
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.05); }
+            50% { transform: rotate(5deg) scale(1.05); }
+            75% { transform: rotate(-5deg) scale(1.05); }
+        }
+        .shaking {
+            animation: shake 0.4s ease-in-out infinite;
+        }
+        /* 音乐旋转动画 */
+        .spin-slow {
+            animation: spin 4s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="pb-20 min-h-screen">
+
+    <!-- 背景音乐 -->
+    <audio id="bgm" loop preload="auto">
+        <source src="https://m801.music.126.net/20260321172021/0fc92dceff54f7e66cc3f7de51c4e07a/jdymusic/obj/wo3DlMOGwrbDjj7DisKw/27671512394/bef7/ebce/f6de/9c9a6de00c2c0fab2c2b53ed6e235c6b.mp3?vuutv=mAzkd+tMw1jKzsMfuBkGLGnyOiZvPOhSy8OoHVWvCWsvgR7KIxJtY58Oyu9qmif3AEynVaYQOsLjeIYP0GkIiZraOsZNJh5WOam6xWuGGWnFHOeZWljwsaDomjPeenQJuBgs18qdCPFYRX3HLnceL37P/3yOwMwGjweQo5uZTNhkucQsvQNCpo0EUkJCPik6yhCMBVjr/Y8n6EZo0PHR1u14P1+mWqkUDcdPCFovW3z5I2ysT7HOvGDpxGTtaeQJFWX7Cv0UN/g8qypcESdjotDO37Rd9i+X0pt3xwe/2D68IrgXTrkPVONwOHgYEcTSJTYljpXThsu9EiSKOtyAfO/IdmT3Ke0l6TF5d89/EoxcOiK1vWFClnA3EKsHBNVf&cdntag=bWFyaz1vc193ZWIscXVhbGl0eV9zdGFuZGFyZA" type="audio/mpeg">
+    </audio>
+
+    <!-- 音乐控制按钮 -->
+    <button id="music-btn" onclick="toggleMusic()" class="fixed top-6 right-6 z-50 w-10 h-10 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-white/50 transition-transform hover:scale-110">
+        🎵
+    </button>
+
+    <!-- Header -->
+    <header class="pt-12 pb-8 px-6 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-[#B2C0D6]/30 to-transparent -z-10"></div>
+        <h1 id="main-title" class="text-3xl sm:text-4xl font-black text-gray-800 tracking-tighter flex items-center justify-center gap-3 transition-all duration-500">
+            ✨ Birthday Blind Box ✨
+        </h1>
+        <p class="text-gray-500 mt-2 font-medium tracking-widest text-xs sm:text-sm uppercase">
+            Only For Mr.LYU · 属于你和我的29岁
+        </p>
+    </header>
+
+    <!-- Grid -->
+    <main class="px-6 max-w-md mx-auto">
+        <div class="grid grid-cols-3 gap-3 sm:gap-4" id="box-grid">
+            <!-- Boxes will be generated here -->
+        </div>
+    </main>
+
+    <!-- Footer Stats & Reset Drawer -->
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl pl-4 pr-2 py-2 rounded-full shadow-lg border border-white/50 flex items-center gap-2 z-10 transition-all duration-300 whitespace-nowrap w-max max-w-[90vw]">
+        <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#B2C0D6] animate-pulse"></span>
+            <span class="text-xs font-bold text-gray-700">已开启</span>
+        </div>
+        <span class="text-lg font-black text-[#8FA1B9]">
+            <span id="opened-count">0</span> <span class="text-gray-300 text-xs">/ 6</span>
+        </span>
+        
+        <!-- 分割线 -->
+        <div class="w-px h-4 bg-gray-200 mx-0.5"></div>
+        
+        <!-- 隐藏式抽屉 -->
+        <div class="flex items-center">
+            <div id="reset-drawer" class="overflow-hidden transition-all duration-300 w-0 opacity-0 flex items-center justify-center">
+                <button onclick="resetBoxes()" class="text-gray-400 hover:text-[#8FA1B9] transition-colors p-1" title="重置所有盲盒">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </button>
+            </div>
+            <button onclick="toggleDrawer()" class="text-gray-400 hover:text-gray-600 transition-transform duration-300 p-1 rounded-full" id="drawer-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div id="modal-content" class="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl relative border-8 border-[#F0F4F8] transform scale-95 transition-transform duration-300">
+            <button onclick="closeModal()" class="absolute -top-4 -right-4 w-10 h-10 bg-[#B2C0D6] rounded-full flex items-center justify-center text-white font-bold shadow-lg hover:bg-[#9AA8C3] transition-colors">
+                ✕
+            </button>
+            
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-[#F0F4F8] text-[#B2C0D6] rounded-full mb-4 text-2xl">
+                    🎇
+                </div>
+                
+                <!-- 弹窗标题 -->
+                <h2 id="modal-title" class="text-2xl sm:text-3xl font-black text-gray-800 mb-6 tracking-tight"></h2>
+                
+                <div class="aspect-square bg-gray-50 rounded-3xl mb-8 overflow-hidden border-4 border-gray-100 flex items-center justify-center shadow-inner relative group">
+                    <img id="modal-image" src="" alt="Content" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 hidden">
+                    <span id="modal-empty" class="text-gray-300 font-bold tracking-widest">EMPTY</span>
+                </div>
+
+                <div id="modal-text" class="inline-block bg-gradient-to-r from-[#B2C0D6] to-[#9AA8C3] text-white font-black text-2xl px-8 py-4 rounded-2xl tracking-[0.2em] shadow-lg shadow-[#D8DEE8] w-full">
+                    ???
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ⬇️ 全局统一封面图设置 ⬇️
+        // ==========================================
+        // 盲盒封面
+        const GLOBAL_COVER_IMAGE = "BlindBoxCover.jpg";
+
+        // ==========================================
+        // ⬇️ 盲盒内容配置 ⬇️
+        // ==========================================
+        // modal_title: 奖
+        // content_text: 提示词
+        const BOX_DATA = [
+            { id: 1, modal_title: "好耶 是二等奖!🥰", content_image: "second.png", content_text: "“治百病”" },
+            { id: 2, modal_title: "嘻嘻 是四等奖!🤩", content_image: "Forth.png", content_text: "小酌两杯" },
+            { id: 3, modal_title: "糟糕 被外星人抓走了👽", content_image: "Thanks.png", content_text: "再来一次？" },
+            { id: 4, modal_title: "Lucky Boy! 一等奖！🥳", content_image: "First.png", content_text: "“I See U”" },
+            { id: 5, modal_title: "💞生日快乐! 🎂", content_image: "DDay.jpg", content_text: "邀请函💌" },
+            { id: 6, modal_title: "喏 是你的三等奖!😎", content_image: "Third.png", content_text: "马年快上马" }
+        ];
+
+        let openedBoxes = JSON.parse(localStorage.getItem('blindBoxOpened') || '[]');
+        let isAnimating = false;
+        let drawerOpen = false;
+        let isMusicPlaying = false;
+        let hasInteracted = false;
+
+        // 音乐控制
+        function toggleMusic() {
+            const audio = document.getElementById('bgm');
+            const btn = document.getElementById('music-btn');
+            
+            if (isMusicPlaying) {
+                audio.pause();
+                btn.classList.remove('spin-slow');
+            } else {
+                audio.play().catch(e => console.log("交互后播放"));
+                btn.classList.add('spin-slow');
+            }
+            isMusicPlaying = !isMusicPlaying;
+            hasInteracted = true;
+        }
+
+        // 撒花特效
+        function fireConfetti() {
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 3,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#B2C0D6', '#B5C4B1', '#ffffff']
+                });
+                confetti({
+                    particleCount: 3,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#B2C0D6', '#B5C4B1', '#ffffff']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // 全开彩蛋
+        function checkCompletion() {
+            const title = document.getElementById('main-title');
+            if (openedBoxes.length === BOX_DATA.length) {
+                title.innerHTML = "🎉 Happy 29th Birthday! 🎉";
+                title.classList.add('text-rose-500');
+            } else {
+                title.innerHTML = "✨ Birthday Blind Box ✨";
+                title.classList.remove('text-rose-500');
+            }
+        }
+
+        function initBoxes() {
+            const grid = document.getElementById('box-grid');
+            grid.innerHTML = '';
+            
+            BOX_DATA.forEach((box, index) => {
+                const isOpened = openedBoxes.includes(box.id);
+                const isSpecial = index === 4; // 第5个盒子
+                
+                const boxEl = document.createElement('div');
+                boxEl.className = `perspective`;
+                
+                // 封面图逻
+                let coverHtml = '';
+                if (isOpened && box.content_image) {
+                    coverHtml = `<img src="${box.content_image}" class="w-full h-full object-cover opacity-40 blur-[3px] scale-110">`;
+                } else if (GLOBAL_COVER_IMAGE) {
+                    coverHtml = `<img src="${GLOBAL_COVER_IMAGE}" class="w-full h-full object-cover">`;
+                } else {
+                    coverHtml = `<div class="w-full h-full flex flex-col items-center justify-center ${isOpened ? 'text-gray-400' : 'text-white/90'}">
+                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+                         <span class="mt-2 font-bold tracking-widest text-[10px]">${isSpecial ? 'SPECIAL' : 'MYSTERY'}</span>
+                       </div>`;
+                }
+
+                let statusBadge = '';
+                if (isSpecial) {
+                    statusBadge = `<div class="absolute top-2 right-2 bg-white/90 backdrop-blur-md text-[#8F9D87] text-[8px] sm:text-[9px] font-black px-1.5 py-1 rounded-full shadow-sm flex items-center gap-0.5 whitespace-nowrap origin-top-right scale-90 sm:scale-100">🎂 生日亲启</div>`;
+                } else {
+                    statusBadge = isOpened
+                        ? `<div class="absolute top-2 right-2 bg-white/40 backdrop-blur-md text-gray-600 text-[8px] sm:text-[9px] font-black px-1.5 py-1 rounded-full shadow-sm flex items-center gap-0.5 whitespace-nowrap origin-top-right scale-90 sm:scale-100">✨ OPENED</div>`
+                        : `<div class="absolute top-2 right-2 bg-black/20 backdrop-blur-md text-white text-[8px] sm:text-[9px] font-black px-1.5 py-1 rounded-full shadow-sm flex items-center gap-0.5 whitespace-nowrap origin-top-right scale-90 sm:scale-100">🔒 LOCKED</div>`;
+                }
+
+                const normalGradient = 'from-[#B2C0D6] to-[#9AA8C3]';
+                const specialGradient = 'from-[#B5C4B1] to-[#9CAE97]'; 
+                const gradientClass = isSpecial ? specialGradient : normalGradient;
+
+                const openedStyle = 'bg-white/30 backdrop-blur-md border-white/50 shadow-inner';
+                const closedStyle = `bg-gradient-to-br ${gradientClass} border-white/60 hover:shadow-xl hover:-translate-y-1`;
+
+                boxEl.innerHTML = `
+                    <div id="box-${box.id}" class="relative aspect-[3/4] rounded-2xl shadow-lg cursor-pointer overflow-hidden border-2 transition-all duration-300 ${isOpened ? openedStyle : closedStyle}" onclick="openBox(${box.id})">
+                        <div class="absolute inset-0 transition-all duration-700">
+                            ${coverHtml}
+                        </div>
+                        ${!isOpened ? '<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>' : ''}
+                        ${statusBadge}
+                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 ${isOpened ? 'bg-white/50 text-gray-600' : 'bg-black/40 text-white'} px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest backdrop-blur-md transition-colors duration-300">
+                            NO.${box.id}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(boxEl);
+            });
+
+            document.getElementById('opened-count').innerText = openedBoxes.length;
+            checkCompletion();
+        }
+
+        function openBox(id) {
+            if (isAnimating) return;
+            
+            if (!hasInteracted && !isMusicPlaying) {
+                toggleMusic();
+            }
+
+            const box = BOX_DATA.find(b => b.id === id);
+            const isOpened = openedBoxes.includes(id);
+
+            if (isOpened) {
+                showModal(box);
+                return;
+            }
+
+            isAnimating = true;
+            const boxEl = document.getElementById(`box-${id}`);
+            boxEl.classList.add('shaking');
+
+            setTimeout(() => {
+                boxEl.classList.remove('shaking');
+                
+                if (!openedBoxes.includes(id)) {
+                    openedBoxes.push(id);
+                    localStorage.setItem('blindBoxOpened', JSON.stringify(openedBoxes));
+                }
+                
+                initBoxes(); 
+                showModal(box);
+                fireConfetti(); 
+                isAnimating = false;
+            }, 1200);
+        }
+
+        function showModal(box) {
+            const backdrop = document.getElementById('modal-backdrop');
+            const content = document.getElementById('modal-content');
+            const img = document.getElementById('modal-image');
+            const empty = document.getElementById('modal-empty');
+            const text = document.getElementById('modal-text');
+            const title = document.getElementById('modal-title');
+
+            // 动态替换弹窗标题
+            title.innerText = box.modal_title || "好耶 获奖咯!😘";
+
+            if (box.content_image) {
+                img.src = box.content_image;
+                img.classList.remove('hidden');
+                empty.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                empty.classList.remove('hidden');
+            }
+
+            text.innerText = box.content_text || '???';
+
+            backdrop.classList.remove('hidden');
+            void backdrop.offsetWidth; 
+            
+            backdrop.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const backdrop = document.getElementById('modal-backdrop');
+            const content = document.getElementById('modal-content');
+            
+            backdrop.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+            }, 300);
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('reset-drawer');
+            const icon = document.getElementById('drawer-icon');
+            drawerOpen = !drawerOpen;
+            
+            if (drawerOpen) {
+                drawer.classList.remove('w-0', 'opacity-0');
+                drawer.classList.add('w-8', 'opacity-100');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                drawer.classList.add('w-0', 'opacity-0');
+                drawer.classList.remove('w-8', 'opacity-100');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function resetBoxes() {
+            openedBoxes = [];
+            localStorage.setItem('blindBoxOpened', JSON.stringify(openedBoxes));
+            initBoxes();
+            toggleDrawer(); 
+        }
+
+        initBoxes();
+    </script>
+</body>
+</html>
